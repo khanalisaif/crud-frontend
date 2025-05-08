@@ -1,10 +1,10 @@
-import React, { useState } from 'react';
-import axios from 'axios';
-import { useNavigate, Link } from 'react-router-dom';
+import React, { useState } from "react";
+import axios from "axios";
+import { useNavigate, Link } from "react-router-dom";
 
 export default function Signup() {
-  const [form, setForm] = useState({ name: '', email: '', password: '' });
-  const [message, setMessage] = useState('');
+  const [form, setForm] = useState({ name: "", email: "", password: "" });
+  const [message, setMessage] = useState("");
   const navigate = useNavigate();
 
   const handleChange = (e) => {
@@ -14,11 +14,14 @@ export default function Signup() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const res = await axios.post('http://localhost:5000/api/user/signup', form);
-      localStorage.setItem('token', res.data.token);
-      navigate('/todo');
+      const res = await axios.post(
+        "http://localhost:5000/api/user/signup",
+        form
+      );
+      localStorage.setItem("userData", JSON.stringify(res.data));
+      navigate("/todo");
     } catch (err) {
-      setMessage(err.response?.data?.error || 'Something went wrong');
+      setMessage(err.response?.data?.error || "Something went wrong");
     }
   };
 
@@ -59,7 +62,7 @@ export default function Signup() {
         </form>
         {message && <p className="text-red-600 mt-4 text-center">{message}</p>}
         <p className="mt-6 text-center text-gray-700">
-          Already have an account?{' '}
+          Already have an account?{" "}
           <Link to="/login" className="text-blue-600 hover:underline">
             Login here
           </Link>
