@@ -1,20 +1,28 @@
-import React from 'react'
-import  { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 
 export default function Todo() {
-    const [todos, setTodos] = useState([]);
+  const [todos, setTodos] = useState([]);
   const [newTodo, setNewTodo] = useState('');
-  const [editingTodo, setEditingTodo] = useState(null); 
-  const [editText, setEditText] = useState(''); 
-
+  const [editingTodo, setEditingTodo] = useState(null);
+  const [editText, setEditText] = useState('');
 
   const fetchTodos = async () => {
-    const response = await fetch('http://localhost:5000/api/todos');
-    const data = await response.json();
+    // we will get userData from localStorage and set to backend
+    let userData = JSON.parse(localStorage.getItem("userData"));
+
+    // const res = await fetch('http://localhost:5000/api/todos');
+
+    console.log("savedData", userData)
+    const res = await fetch('http://localhost:5000/api/todos', {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${userData.token}`,  
+      }
+    });
+    const data = await res.json();
     setTodos(data);
   };
-
-
 
   const addTodo = async () => {
     if (newTodo.trim()) {
@@ -28,12 +36,6 @@ export default function Todo() {
     }
   };
 
-  const startEdit = (todo) => {
-    setEditingTodo(todo._id);
-    setEditText(todo.title);
-  };
-
-
   const saveEdit = async (id) => {
     if (editText.trim()) {
       await fetch(`http://localhost:5000/api/todos/${id}`, {
@@ -41,90 +43,84 @@ export default function Todo() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ title: editText }),
       });
-      setEditingTodo(null); 
+      setEditingTodo(null);
       fetchTodos();
     }
   };
 
-  
   const deleteTodo = async (id) => {
-    await fetch(`http://localhost:5000/api/todos/${id}`, {
-      method: 'DELETE',
-    });
+    await fetch(`http://localhost:5000/api/todos/${id}`, { method: 'DELETE' });
     fetchTodos();
   };
 
-  
   useEffect(() => {
     fetchTodos();
   }, []);
 
   return (
-    <div className="min-h-screen bg-gray-100 p-8">
-      <div className="max-w-2xl mx-auto bg-white p-6 rounded-lg shadow-lg">
-        <h1 className="text-3xl font-bold text-center mb-6">Todo App</h1>
-        <div className="flex mb-6">
+    <div className="min-h-screen bg-gray-100 flex items-center justify-center p-4">
+      <div className="w-full max-w-xl bg-white rounded-lg shadow-md p-6">
+        <h2 className="text-2xl font-bold mb-4 text-center text-gray-800">Todo Dashboard</h2>
+        <div className="flex gap-2 mb-4">
           <input
-            type="text"
             value={newTodo}
             onChange={(e) => setNewTodo(e.target.value)}
-            placeholder="Add a new todo"
-            className="flex-1 p-2 border border-gray-300 rounded-l-lg focus:outline-none"
+            placeholder="Add todo"
+            className="flex-grow px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
           <button
             onClick={addTodo}
-            className="bg-blue-500 text-white px-4 rounded-r-lg hover:bg-blue-600"
+            className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
           >
             Add
           </button>
         </div>
-        <ul>
+        <ul className="space-y-2">
           {todos.map((todo) => (
             <li
               key={todo._id}
-              className="flex justify-between items-center p-3 border-b border-gray-200"
+              className="flex items-center justify-between bg-gray-50 px-4 py-2 rounded-md shadow-sm"
             >
               {editingTodo === todo._id ? (
-               
-                <input
-                  type="text"
-                  value={editText}
-                  onChange={(e) => setEditText(e.target.value)}
-                  className="flex-1 p-2 border border-gray-300 rounded-lg focus:outline-none"
-                />
-              ) : (
-                
-                <span className="flex-1 text-gray-700">{todo.title}</span>
-              )}
-              <div className="space-x-2">
-                {editingTodo === todo._id ? (
-                  
+                <div className="flex items-center gap-2 flex-grow">
+                  <input
+                    value={editText}
+                    onChange={(e) => setEditText(e.target.value)}
+                    className="flex-grow px-2 py-1 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
                   <button
                     onClick={() => saveEdit(todo._id)}
-                    className="bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded"
+                    className="px-2 py-1 bg-green-500 text-white rounded-md hover:bg-green-600"
                   >
                     Save
                   </button>
-                ) : (
-                 
-                  <button
-                    onClick={() => startEdit(todo)}
-                    className="bg-yellow-500 hover:bg-yellow-600 text-white px-3 py-1 rounded"
-                  >
-                    Edit
-                  </button>
-                )}
-                <button
-                  onClick={() => deleteTodo(todo._id)}
-                  className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded"
-                >
-                  Delete
-                </button>
-              </div>
+                </div>
+              ) : (
+                <div className="flex items-center justify-between flex-grow">
+                  <span className="text-gray-800">{todo.title}</span>
+                  <div className="flex gap-2 ml-4">
+                    <button
+                      onClick={() => {
+                        setEditingTodo(todo._id);
+                        setEditText(todo.title);
+                      }}
+                      className="px-2 py-1 bg-yellow-400 text-white rounded-md hover:bg-yellow-500"
+                    >
+                      Edit
+                    </button>
+                    <button
+                      onClick={() => deleteTodo(todo._id)}
+                      className="px-2 py-1 bg-red-500 text-white rounded-md hover:bg-red-600"
+                    >
+                      Delete
+                    </button>
+                  </div>
+                </div>
+              )}
             </li>
           ))}
         </ul>
       </div>
     </div>
   );
-};
+}
